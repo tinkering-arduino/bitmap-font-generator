@@ -1,0 +1,156 @@
+<div id="tablesettings" style="border: 1px #E2E2E0 solid; padding: 10px; margin: 5px 0;">
+	<p>
+		<label for="tablesettings-row" style="display: inline-block; font-weight: bold; width: 100px;">Rows:</label>
+		<input id="tablesettings-row" name="tablesettings-row" value="">
+	</p>
+	<p>
+		<label for="tablesettings-col" style="display: inline-block; font-weight: bold; width: 100px;">Cols:</label>
+		<input id="tablesettings-col" name="tablesettings-col" value="">
+	</p>
+
+	<input type="button" value="reset and clear Matrix" onclick="resetMatrix()"></input>
+	<input type="button" value="clear Matrix" onclick="clearMatrix()"></input>
+</div>
+
+<div id="tablematrix" style="border: 1px #E2E2E0 solid; padding: 10px; margin: 5px 0;"></div>
+
+<div id="out" style="border: 1px #E2E2E0 solid; padding: 10px; margin: 5px 0;">
+	<p style="font-weight: bold;">binary representation</p>
+	<p id="bin_out"></p>
+	<p style="font-weight: bold;">hexadecimal representation</p>
+	<p id="hex_out"></p>
+</div>
+
+<script>
+	var matrix = [];
+	var num_cols = 8;
+	var num_rows = 8;
+	
+	window.onload = function () {
+		initTablesettings();
+		initMatrix();
+		renderTable();
+		resetMatrix();
+	}
+	
+	function initTablesettings() {
+		var input_rows = document.getElementById("tablesettings-row");
+		input_rows.value = num_rows;
+		
+		var input_cols = document.getElementById("tablesettings-col");
+		input_cols.value = num_cols;
+	}
+	
+	function initMatrix() {
+		for (var count_col=0; count_col<num_cols; count_col++) {
+			var tmp = [];
+			for (var count_row=0; count_row<num_rows; count_row++) {
+				tmp[count_row] = 0;
+			}
+			matrix[count_col] = tmp;
+		}
+	}
+    
+    function renderTable() {
+		var table_width = num_cols * 25;
+		var table = '<table style="border: 1px #e2e2e2 solid; width: ' + table_width + 'px;">';
+		for (var count_row=0; count_row < num_rows; count_row++) {
+			table += '<tr>';
+			for (var count_col=0; count_col < num_cols; count_col++) {
+				cell_id = "matrix_" + count_row.toString() + "_" + count_col.toString()
+				table += '<td id="' + cell_id + '" onmousedown="toggleCell(this, ' + count_row + ', ' + count_col + ')" style="width: 20px; height: 20px;">' + matrix[count_col][count_row] + '</td>';
+			}
+			table += '</tr>';
+		}
+		table += '</table>';
+		
+		var tablematrix = document.getElementById("tablematrix");
+		tablematrix.innerHTML = table;
+	}
+    
+	function toggleCell(obj, row, col) {
+		if( matrix[col][row] == 0 ) {
+			matrix[col][row] = 1;
+			obj.style.backgroundColor = "#000000";
+			obj.style.color = "#ffffff";
+			obj.innerHTML = "1";
+		} else {
+			matrix[col][row] = 0;
+			obj.style.backgroundColor = "#E2E2E0";
+			obj.style.color = "#000000";
+			obj.innerHTML = "0";
+		}
+		generate();
+	}
+	
+	function clearMatrix() {
+		initMatrix();
+		
+		for (var count_col=0; count_col<num_cols; count_col++) {
+			for (var count_row=0; count_row<num_rows; count_row++) {
+				var tableCell = document.getElementById("matrix_" + count_row.toString() + "_" + count_col.toString());
+				tableCell.style.backgroundColor = "";
+				tableCell.style.color = "#000000";
+				tableCell.innerHTML = "0";
+			}
+		}
+		
+		generate();
+	}
+	
+	function resetMatrix() {
+		var input_rows = document.getElementById("tablesettings-row");
+		var new_num_rows = parseInt(input_rows.value);
+		if (new_num_rows && new_num_rows >= 1 && new_num_rows <= 16) {
+			num_rows = new_num_rows;
+		} else {
+			input_rows.value = num_rows;
+		}
+		
+		var input_cols = document.getElementById("tablesettings-col");
+		var new_num_cols = parseInt(input_cols.value);
+		if (new_num_cols && new_num_cols >= 1 && new_num_cols <= 16) {
+			num_cols = new_num_cols;
+		} else {
+			input_cols.value = num_cols;
+		}
+		
+		initMatrix();
+		
+		renderTable();
+		
+		generate();
+	}
+	
+	function generate() {
+		
+		var binVal = "";
+		var hexVal = "";
+		
+		for (var count_col=0; count_col<num_cols; count_col++) {
+			col = matrix[count_col];
+			
+			bin_tmp = "";
+			hex_tmp = 0;
+			for (var count_row=num_rows-1; count_row>=0; count_row--) {
+				value = col[count_row];
+				bin_tmp += value.toString();
+				hex_tmp = hex_tmp * 2 + value;
+			}
+			
+			binVal += '&nbsp;&nbsp;&nbsp;&nbsp;' + bin_tmp;
+			hexVal += "0x" + hex_tmp.toString(16);
+			
+			if (count_col < num_cols-1) {
+				binVal = binVal + ',<br />';
+				hexVal = hexVal + ',';
+			}
+		}
+		
+		var binOut = document.getElementById("bin_out");
+		binOut.innerHTML = 'const unsigned char font6_3[1][' + num_cols + '] PROGMEM = { <br/>&nbsp;&nbsp;{ <br/>' + binVal + '<br/>&nbsp;&nbsp;} <br/>};';
+		
+		var hexOut = document.getElementById("hex_out");
+		hexOut.innerHTML = 'const unsigned char font6_3[1][' + num_cols + '] PROGMEM = { <br/> &nbsp;&nbsp;{ ' + hexVal + ' } <br/>};';
+	}
+</script>
